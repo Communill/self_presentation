@@ -1,0 +1,39 @@
+/* Основные стили для всего сайта */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    .content {
+        padding: 10px;
+    }
+    
+    .panel {
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 1.8em;
+    }
+}

@@ -1,0 +1,1127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Нейронная сеть для распознавания цифр</title>
+  <style>
+    :root{
+      --bg1:#0a0a2a;
+      --bg2:#1a1a4a;
+      --accent:#94e8fd;
+      --danger:#ff6b6b;
+
+      --panel-bg: rgba(10,10,42,.7);
+      --panel-br: rgba(148,232,253,.3);
+
+      /* Важно для 1366×768: уменьшаем базовые размеры и делаем их адаптивными */
+      --canvas-size: clamp(280px, 32vw, 400px);
+      --gap: clamp(16px, 2vw, 30px);
+      --pad: clamp(16px, 2vw, 25px);
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box}
+
+    body{
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
+      color:#fff;
+      min-height:100vh;
+      padding: clamp(12px, 2vw, 20px);
+      overflow-x:hidden; /* защита от горизонтального “съезда” */
+    }
+
+    .container{
+      max-width: 1366px; /* целимся в ваш экран */
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .back-button{
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .back-button a{
+      display:inline-block;
+      padding: 10px 16px;
+      background: rgba(148, 232, 253, 0.1);
+      color: var(--accent);
+      text-decoration:none;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      transition: all .2s ease;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .back-button a:hover{
+      background: rgba(148, 232, 253, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 12px rgba(148, 232, 253, 0.25);
+    }
+
+    .header{
+      text-align:center;
+      margin-bottom: var(--gap);
+      padding: var(--pad);
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      border: 1px solid var(--panel-br);
+    }
+
+    .header h1{
+      color: var(--accent);
+      font-size: clamp(22px, 2.2vw, 38px);
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(148, 232, 253, 0.5);
+      line-height: 1.15;
+    }
+
+    .header p{
+      font-size: clamp(14px, 1.1vw, 18px);
+      opacity: .92;
+      max-width: 900px;
+      margin: 0 auto;
+      line-height: 1.35;
+    }
+
+    .content{
+      display:grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--gap);
+      align-items: start;
+    }
+
+    /* На 1366×768 часто важна высота: делаем layout устойчивее */
+    @media (max-width: 1100px){
+      .content{
+        grid-template-columns: 1fr;
+      }
+      .back-button{
+        position: static;
+        margin-bottom: 12px;
+      }
+    }
+
+    .panel{
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-br);
+      border-radius: 15px;
+      padding: var(--pad);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      min-width: 0; /* критично для grid, чтобы ничего не “распирало” */
+    }
+
+    .panel h2{
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-size: clamp(18px, 1.6vw, 28px);
+      border-bottom: 2px solid rgba(148, 232, 253, 0.3);
+      padding-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .drawing-area{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    /* Стабильный canvas без “съезда”: задаём только CSS размер, реальный делаем в JS под DPR */
+    #drawingCanvas{
+      width: var(--canvas-size);
+      height: var(--canvas-size);
+      border: 3px solid rgba(148, 232, 253, 0.3);
+      border-radius: 10px;
+      background: #000;
+      cursor: crosshair;
+      box-shadow: 0 0 20px rgba(148, 232, 253, 0.2);
+      touch-action: none;
+      display:block;
+      max-width: 100%;
+    }
+
+    .canvas-buttons{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button{
+      padding: 10px 14px;
+      background: rgba(148, 232, 253, 0.1);
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      cursor:pointer;
+      transition: all .2s ease;
+      font-size: 14px;
+      font-weight: 700;
+      min-width: 160px;
+      max-width: 100%;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled){
+      background: rgba(148, 232, 253, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(148, 232, 253, 0.28);
+    }
+    button:disabled{opacity:.55;cursor:not-allowed}
+
+    .result{
+      text-align:center;
+      margin-top: 6px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(148, 232, 253, 0.3);
+      width: min(520px, 100%);
+    }
+
+    .result h3{color: var(--accent);margin-bottom:8px;font-size: 16px}
+    #predictionResult{font-size: clamp(34px, 3vw, 48px);font-weight: 800;color: var(--danger);margin: 8px 0}
+    .confidence{font-size: 14px;color: var(--accent)}
+
+    .predictions{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    @media (max-width: 520px){
+      .predictions{grid-template-columns: repeat(2, minmax(0, 1fr))}
+      button{min-width: 140px}
+    }
+
+    .prediction-item{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(148, 232, 253, 0.2);
+      min-width: 0;
+    }
+
+    .prediction-number{
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+
+    .prediction-bar{
+      width: 100%;
+      height: 120px; /* чуть ниже — меньше риск “не влезть” по высоте 768 */
+      background: rgba(148, 232, 253, 0.1);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prediction-fill{
+      width: 100%;
+      background: linear-gradient(0deg, var(--accent), #4d9de0);
+      position: absolute;
+      bottom: 0;
+      border-radius: 6px 6px 0 0;
+      transition: height .2s ease;
+    }
+
+    .prediction-value{
+      position: absolute;
+      top: 6px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      text-shadow: 0 1px 1px rgba(0,0,0,.35);
+      pointer-events:none;
+    }
+
+    .control-panel{display:flex;flex-direction:column;gap: 16px}
+
+    .control-group{
+      background: rgba(0, 0, 0, 0.3);
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 232, 253, 0.2);
+      min-width: 0;
+    }
+
+    .control-group h3{color: var(--accent);margin-bottom: 12px;font-size: 16px}
+
+    .slider-container{margin: 12px 0}
+    .slider-container label{display:block;margin-bottom: 6px;color: var(--accent);font-size: 14px}
+    input[type="range"]{
+      width: 100%;
+      height: 10px;
+      background: rgba(148, 232, 253, 0.1);
+      border-radius: 5px;
+      outline:none;
+      -webkit-appearance:none;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width: 22px;
+      height: 22px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor:pointer;
+      box-shadow: 0 0 10px rgba(148, 232, 253, 0.8);
+    }
+
+    .value-display{text-align:right;color: var(--accent);font-weight: 800;font-size: 14px}
+
+    .network-info{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .info-item{
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border: 1px solid rgba(148, 232, 253, 0.2);
+      min-width: 0;
+    }
+    .info-item h4{color: var(--accent);margin-bottom: 6px;font-size: 14px}
+
+    .training-status{
+      margin-top: 10px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(148, 232, 253, 0.3);
+    }
+
+    .progress-container{
+      width: 100%;
+      height: 18px;
+      background: rgba(148, 232, 253, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .progress-bar{
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #4d9de0);
+      width: 0%;
+      transition: width .2s ease;
+    }
+
+    .status-text{font-size: 14px;margin: 10px 0;color: var(--accent);line-height: 1.25}
+
+    .training-controls{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .test-images{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+      justify-items:center;
+    }
+
+    .test-image{
+      width: 48px;
+      height: 48px;
+      background: #000;
+      border: 2px solid rgba(148, 232, 253, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      font-size: 18px;
+      user-select:none;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+
+    .test-image:hover{border-color: var(--accent);transform: scale(1.05)}
+
+    .footer{
+      text-align:center;
+      margin-top: var(--gap);
+      padding: 16px;
+      color: rgba(148, 232, 253, 0.75);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .highlight{color: var(--danger);font-weight: 800}
+
+    .loading{
+      display:none;
+      position:fixed;
+      top:0;left:0;width:100%;height:100%;
+      background: rgba(0,0,0,0.82);
+      z-index: 1000;
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      padding: 20px;
+    }
+
+    .loading.active{display:flex}
+
+    .spinner{
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(148, 232, 253, 0.3);
+      border-top: 5px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 18px;
+    }
+
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+    /* Если высота небольшая (768 и ниже), чуть уплотняем вертикальные отступы */
+    @media (max-height: 780px){
+      .header{margin-bottom: 16px}
+      .panel{padding: 18px}
+      .prediction-bar{height: 110px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="back-button">
+      <a href="/">← На главную</a>
+    </div>
+
+    <div class="header">
+      <h1>Нейронная сеть для распознавания цифр</h1>
+      <p>Нарисуйте цифру от 0 до 9 и посмотрите распределение вероятностей. (Демо-версия без настоящего MNIST.)</p>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <h2>Нарисуйте цифру</h2>
+
+        <div class="drawing-area">
+          <canvas id="drawingCanvas"></canvas>
+
+          <div class="canvas-buttons">
+            <button type="button" id="clearBtn">Очистить</button>
+            <button type="button" id="predictBtn">Распознать</button>
+            <button type="button" id="randomBtn">Случайный тест</button>
+            <button type="button" id="loadTestBtn">Пересоздать тест-данные</button>
+          </div>
+
+          <div class="result">
+            <h3>Результат распознавания:</h3>
+            <div id="predictionResult">-</div>
+            <div class="confidence" id="confidenceText">Уверенность: 0%</div>
+          </div>
+
+          <h3 style="color: var(--accent); font-size: 16px;">Вероятности:</h3>
+          <div class="predictions" id="predictions"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Управление нейронной сетью</h2>
+
+        <div class="control-panel">
+          <div class="control-group">
+            <h3>Параметры сети</h3>
+
+            <div class="slider-container">
+              <label>Скрытые нейроны: <span id="hiddenValue">200</span></label>
+              <input type="range" id="hiddenSlider" min="50" max="500" step="10" value="200" />
+            </div>
+
+            <div class="slider-container">
+              <label>Скорость обучения: <span id="learningValue">0.1</span></label>
+              <input type="range" id="learningSlider" min="0.01" max="0.5" step="0.01" value="0.1" />
+            </div>
+
+            <div class="slider-container">
+              <label>Эпох обучения: <span id="epochsValue">5</span></label>
+              <input type="range" id="epochsSlider" min="1" max="20" step="1" value="5" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3>Управление сетью</h3>
+            <div class="training-controls">
+              <button type="button" id="initBtn">Инициализировать сеть</button>
+              <button type="button" id="trainBtn" disabled>Обучить сеть</button>
+              <button type="button" id="stopBtn" disabled>Остановить</button>
+              <button type="button" id="resetBtn">Сбросить всё</button>
+            </div>
+          </div>
+
+          <div class="training-status">
+            <h3 style="color: var(--accent);margin-bottom: 8px;">Статус обучения</h3>
+            <div class="status-text" id="statusText">Сеть не инициализирована</div>
+            <div class="progress-container">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="value-display">Точность: <span id="accuracyText">0%</span></div>
+
+            <div class="network-info">
+              <div class="info-item">
+                <h4>Архитектура</h4>
+                <div>784 → <span id="hiddenCount">200</span> → 10</div>
+              </div>
+              <div class="info-item">
+                <h4>Обучающих примеров</h4>
+                <div id="trainCount">0</div>
+              </div>
+              <div class="info-item">
+                <h4>Тестовых примеров</h4>
+                <div id="testCount">0</div>
+              </div>
+              <div class="info-item">
+                <h4>Эпоха</h4>
+                <div id="epochCount">0/0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3>Быстрые тесты</h3>
+            <p style="opacity:.9;font-size: 14px;">Выберите тестовую цифру:</p>
+            <div class="test-images" id="testImages"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Feedforward сеть | Sigmoid | Backprop (демо)</p>
+      <p>Для настоящего MNIST нужен отдельный датасет и загрузка данных.</p>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div id="loadingText">Загрузка...</div>
+  </div>
+
+  <script>
+    // =========== КОНФИГУРАЦИЯ ===========
+    const config = {
+      inputNodes: 784,
+      outputNodes: 10,
+      hiddenNodes: 200,
+      learningRate: 0.1,
+      epochs: 5
+    };
+
+    // =========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===========
+    let network = null;
+    let isTraining = false;
+    let trainingStopped = false;
+    let trainingData = [];
+    let testData = [];
+    let currentEpoch = 0;
+    let totalIterations = 0;
+    let currentIteration = 0;
+
+    // =========== DOM ===========
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    const loading = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    const predictionsContainer = document.getElementById('predictions');
+    const statusText = document.getElementById('statusText');
+    const accuracyText = document.getElementById('accuracyText');
+    const progressBar = document.getElementById('progressBar');
+    const predictionResult = document.getElementById('predictionResult');
+    const confidenceText = document.getElementById('confidenceText');
+    const hiddenCount = document.getElementById('hiddenCount');
+    const trainCount = document.getElementById('trainCount');
+    const testCount = document.getElementById('testCount');
+    const epochCount = document.getElementById('epochCount');
+
+    // =========== UI HELPERS ===========
+    function showLoading(text) {
+      loadingText.textContent = text;
+      loading.classList.add('active');
+    }
+    function hideLoading() {
+      loading.classList.remove('active');
+    }
+    function updateStatus(text) {
+      statusText.textContent = text;
+    }
+
+    function showMessage(text, type = 'info') {
+      const colors = { success: '#4CAF50', error: '#f44336', info: '#2196F3' };
+
+      const notification = document.createElement('div');
+      notification.textContent = text;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        left: auto;
+        max-width: min(420px, calc(100vw - 40px));
+        background: ${colors[type] || colors.info};
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 8px;
+        z-index: 2000;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+        font-size: 14px;
+        line-height: 1.35;
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 2800);
+    }
+
+    // =========== CANVAS: HiDPI ===========
+    function setupHiDPICanvas() {
+      // Берем реальный CSS-размер (адаптивный)
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+
+      // Рисуем в CSS-пикселях
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      clearCanvas();
+      ctx.lineWidth = 20;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#94e8fd';
+    }
+
+    function clearCanvas() {
+      ctx.save();
+      // очистка в реальных пикселях backbuffer
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top }; // CSS-пиксели
+    }
+
+    function initDrawingHandlers() {
+      let isDrawing = false;
+      let last = { x: 0, y: 0 };
+
+      function start(e) {
+        isDrawing = true;
+        last = getPointerPos(e);
+      }
+
+      function move(e) {
+        if (!isDrawing) return;
+        const p = getPointerPos(e);
+
+        ctx.beginPath();
+        ctx.moveTo(last.x, last.y);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        last = p;
+      }
+
+      function end() {
+        isDrawing = false;
+      }
+
+      canvas.addEventListener('mousedown', start);
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', end);
+
+      canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, { passive: false });
+      canvas.addEventListener('touchend', end);
+      canvas.addEventListener('touchcancel', end);
+    }
+
+    // =========== PREPROCESS: canvas -> 28x28 ===========
+    function canvasTo28x28Vector() {
+      const tmp = document.createElement('canvas');
+      tmp.width = 28;
+      tmp.height = 28;
+
+      const tctx = tmp.getContext('2d', { willReadFrequently: true });
+      tctx.drawImage(canvas, 0, 0, 28, 28);
+
+      const img = tctx.getImageData(0, 0, 28, 28);
+      const vec = new Array(784);
+
+      for (let i = 0, p = 0; i < img.data.length; i += 4, p++) {
+        const r = img.data[i], g = img.data[i + 1], b = img.data[i + 2];
+        const brightness = (r + g + b) / 3;
+
+        // Инверсия: фон (черный) -> 0, штрих (яркий/цветной) -> 1
+        const v = 1 - (brightness / 255);
+
+        // 0.01..1.0
+        vec[p] = v * 0.99 + 0.01;
+      }
+      return vec;
+    }
+
+    // =========== NEURAL NETWORK (с bias и d/dx сигмоиды) ===========
+    class NeuralNetwork {
+      constructor(inputNodes, hiddenNodes, outputNodes, learningRate) {
+        this.inodes = inputNodes;
+        this.hnodes = hiddenNodes;
+        this.onodes = outputNodes;
+        this.lr = learningRate;
+
+        this.wih = this.randomMatrix(hiddenNodes, inputNodes, Math.pow(hiddenNodes, -0.5));
+        this.who = this.randomMatrix(outputNodes, hiddenNodes, Math.pow(outputNodes, -0.5));
+
+        this.bh = this.randomMatrix(hiddenNodes, 1, 0.01);
+        this.bo = this.randomMatrix(outputNodes, 1, 0.01);
+
+        this.activation = (x) => 1 / (1 + Math.exp(-x));
+      }
+
+      randomMatrix(rows, cols, scale) {
+        const m = new Array(rows);
+        for (let i = 0; i < rows; i++) {
+          m[i] = new Array(cols);
+          for (let j = 0; j < cols; j++) m[i][j] = (Math.random() * 2 - 1) * scale;
+        }
+        return m;
+      }
+
+      query(inputs) {
+        const inputM = inputs.map(v => [v]);
+
+        const hiddenInputs = this.matrixAdd(this.matrixMultiply(this.wih, inputM), this.bh);
+        const hiddenOutputs = hiddenInputs.map(row => row.map(this.activation));
+
+        const finalInputs = this.matrixAdd(this.matrixMultiply(this.who, hiddenOutputs), this.bo);
+        const finalOutputs = finalInputs.map(row => row.map(this.activation));
+        return finalOutputs.map(r => r[0]);
+      }
+
+      train(inputs, targets) {
+        const inputM = inputs.map(v => [v]);
+        const targetM = targets.map(v => [v]);
+
+        const hiddenInputs = this.matrixAdd(this.matrixMultiply(this.wih, inputM), this.bh);
+        const hiddenOutputs = hiddenInputs.map(row => row.map(this.activation));
+
+        const finalInputs = this.matrixAdd(this.matrixMultiply(this.who, hiddenOutputs), this.bo);
+        const finalOutputs = finalInputs.map(row => row.map(this.activation));
+
+        const outputErrors = this.matrixSubtract(targetM, finalOutputs);
+
+        // delta_out = (t - y) * y * (1 - y)
+        const outputDeltas = finalOutputs.map((row, i) => {
+          const y = row[0];
+          return [outputErrors[i][0] * y * (1 - y)];
+        });
+
+        const whoAdj = this.matrixMultiply(outputDeltas, this.transpose(hiddenOutputs))
+          .map(row => row.map(v => v * this.lr));
+        this.who = this.matrixAdd(this.who, whoAdj);
+
+        const boAdj = outputDeltas.map(d => [d[0] * this.lr]);
+        this.bo = this.matrixAdd(this.bo, boAdj);
+
+        const hiddenErrors = this.matrixMultiply(this.transpose(this.who), outputDeltas);
+
+        const hiddenDeltas = hiddenOutputs.map((row, i) => {
+          const y = row[0];
+          return [hiddenErrors[i][0] * y * (1 - y)];
+        });
+
+        const wihAdj = this.matrixMultiply(hiddenDeltas, this.transpose(inputM))
+          .map(row => row.map(v => v * this.lr));
+        this.wih = this.matrixAdd(this.wih, wihAdj);
+
+        const bhAdj = hiddenDeltas.map(d => [d[0] * this.lr]);
+        this.bh = this.matrixAdd(this.bh, bhAdj);
+      }
+
+      matrixMultiply(a, b) {
+        const res = new Array(a.length);
+        for (let i = 0; i < a.length; i++) {
+          res[i] = new Array(b[0].length).fill(0);
+          for (let j = 0; j < b[0].length; j++) {
+            let sum = 0;
+            for (let k = 0; k < a[0].length; k++) sum += a[i][k] * b[k][j];
+            res[i][j] = sum;
+          }
+        }
+        return res;
+      }
+
+      matrixAdd(a, b) {
+        return a.map((row, i) => row.map((v, j) => v + b[i][j]));
+      }
+
+      matrixSubtract(a, b) {
+        return a.map((row, i) => row.map((v, j) => v - b[i][j]));
+      }
+
+      transpose(m) {
+        return m[0].map((_, i) => m.map(row => row[i]));
+      }
+    }
+
+    // =========== UI INIT ===========
+    function initUI() {
+      predictionsContainer.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const predItem = document.createElement('div');
+        predItem.className = 'prediction-item';
+        predItem.innerHTML = `
+          <div class="prediction-number">${i}</div>
+          <div class="prediction-bar">
+            <div class="prediction-fill" id="predFill${i}" style="height:0%"></div>
+            <div class="prediction-value" id="predValue${i}">0%</div>
+          </div>
+        `;
+        predictionsContainer.appendChild(predItem);
+      }
+
+      const testImages = document.getElementById('testImages');
+      testImages.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const el = document.createElement('div');
+        el.className = 'test-image';
+        el.textContent = i;
+        el.dataset.digit = i;
+        el.addEventListener('click', () => loadTestDigit(i));
+        testImages.appendChild(el);
+      }
+
+      updateSliders();
+      resetPredictionsUI();
+    }
+
+    function updateSliders() {
+      const hiddenSlider = document.getElementById('hiddenSlider');
+      const learningSlider = document.getElementById('learningSlider');
+      const epochsSlider = document.getElementById('epochsSlider');
+
+      hiddenSlider.value = config.hiddenNodes;
+      learningSlider.value = config.learningRate;
+      epochsSlider.value = config.epochs;
+
+      document.getElementById('hiddenValue').textContent = config.hiddenNodes;
+      document.getElementById('learningValue').textContent = config.learningRate;
+      document.getElementById('epochsValue').textContent = config.epochs;
+
+      hiddenCount.textContent = config.hiddenNodes;
+    }
+
+    function resetPredictionsUI() {
+      predictionResult.textContent = '-';
+      confidenceText.textContent = 'Уверенность: 0%';
+      for (let i = 0; i < 10; i++) {
+        const fill = document.getElementById(`predFill${i}`);
+        const val = document.getElementById(`predValue${i}`);
+        if (fill) fill.style.height = '0%';
+        if (val) val.textContent = '0%';
+      }
+    }
+
+    function updatePredictions(outputs) {
+      const maxOutput = Math.max(...outputs);
+      const predictedDigit = outputs.indexOf(maxOutput);
+
+      predictionResult.textContent = predictedDigit;
+      confidenceText.textContent = `Уверенность: ${(maxOutput * 100).toFixed(1)}%`;
+
+      outputs.forEach((value, index) => {
+        const percentage = value * 100;
+        const fill = document.getElementById(`predFill${index}`);
+        const valueDisplay = document.getElementById(`predValue${index}`);
+        if (!fill || !valueDisplay) return;
+
+        fill.style.height = `${percentage}%`;
+        valueDisplay.textContent = `${percentage.toFixed(1)}%`;
+
+        if (index === predictedDigit) {
+          fill.style.background = 'linear-gradient(0deg, #ff6b6b, #ffa8a8)';
+          valueDisplay.style.color = '#ff6b6b';
+        } else {
+          fill.style.background = 'linear-gradient(0deg, #94e8fd, #4d9de0)';
+          valueDisplay.style.color = '#94e8fd';
+        }
+      });
+    }
+
+    // =========== DATA (синтетика) ===========
+    async function generateTestData(count = 1200) {
+      showLoading('Генерация тестовых данных...');
+      trainingData = [];
+      testData = [];
+
+      for (let i = 0; i < count; i++) {
+        const digit = Math.floor(Math.random() * 10);
+        const pixels = new Array(784).fill(0).map(() => Math.random() * 0.2);
+
+        // “цифрозависимый” паттерн — чтобы сети было чему учиться в демо
+        const seed = digit * 73;
+        for (let j = 0; j < 140; j++) {
+          const idx = (seed + Math.floor(Math.random() * 784)) % 784;
+          pixels[idx] = Math.min(1, pixels[idx] + 0.6 + Math.random() * 0.4);
+        }
+
+        const item = { digit, pixels };
+        if (i < count * 0.8) trainingData.push(item);
+        else testData.push(item);
+      }
+
+      trainCount.textContent = trainingData.length;
+      testCount.textContent = testData.length;
+
+      hideLoading();
+      showMessage(`Сгенерировано: train=${trainingData.length}, test=${testData.length}`, 'success');
+    }
+
+    async function loadTestDigit(digit) {
+      if (!testData.length) {
+        showMessage('Тестовые данные не загружены!', 'error');
+        return;
+      }
+
+      const pool = testData.filter(d => d.digit === digit);
+      if (!pool.length) {
+        showMessage(`Нет тестовых данных для цифры ${digit}`, 'error');
+        return;
+      }
+
+      const sample = pool[Math.floor(Math.random() * pool.length)];
+
+      clearCanvas();
+
+      // визуализация 28x28 на canvas (в CSS-пикселях)
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      const scale = size / 28;
+
+      ctx.save();
+      ctx.fillStyle = '#94e8fd';
+      for (let i = 0; i < 784; i++) {
+        const v = sample.pixels[i];
+        if (v < 0.15) continue;
+
+        const x = (i % 28) * scale;
+        const y = Math.floor(i / 28) * scale;
+
+        ctx.globalAlpha = Math.min(1, (v - 0.15) / 0.85);
+        ctx.fillRect(x + 2, y + 2, Math.max(1, scale - 4), Math.max(1, scale - 4));
+      }
+      ctx.restore();
+
+      if (network) updatePredictions(network.query(sample.pixels));
+
+      showMessage(`Загружен тестовый пример цифры: ${digit}`, 'success');
+    }
+
+    function testAccuracy() {
+      if (!network || !testData.length) return 0;
+
+      const sample = testData.slice(0, Math.min(200, testData.length));
+      let correct = 0;
+
+      for (const item of sample) {
+        const outputs = network.query(item.pixels);
+        const pred = outputs.indexOf(Math.max(...outputs));
+        if (pred === item.digit) correct++;
+      }
+      return correct / sample.length;
+    }
+
+    // =========== ACTIONS ===========
+    function processDrawing() {
+      if (!network) {
+        showMessage('Сначала инициализируйте сеть!', 'error');
+        return;
+      }
+      const inputs = canvasTo28x28Vector();
+      const outputs = network.query(inputs);
+      updatePredictions(outputs);
+    }
+
+    async function trainNetwork() {
+      if (!network || isTraining) return;
+      if (!trainingData.length) {
+        showMessage('Нет данных для обучения', 'error');
+        return;
+      }
+
+      isTraining = true;
+      trainingStopped = false;
+      currentEpoch = 0;
+
+      totalIterations = config.epochs * trainingData.length;
+      currentIteration = 0;
+
+      updateStatus(`Начало обучения... Эпох: ${config.epochs}`);
+      document.getElementById('trainBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+
+      for (let epoch = 0; epoch < config.epochs; epoch++) {
+        if (trainingStopped) break;
+
+        currentEpoch = epoch + 1;
+        epochCount.textContent = `${currentEpoch}/${config.epochs}`;
+        updateStatus(`Эпоха ${currentEpoch}/${config.epochs}`);
+
+        const shuffled = [...trainingData].sort(() => Math.random() - 0.5);
+
+        for (const data of shuffled) {
+          if (trainingStopped) break;
+
+          const targets = new Array(10).fill(0.01);
+          targets[data.digit] = 0.99;
+
+          network.train(data.pixels, targets);
+
+          currentIteration++;
+          const progress = (currentIteration / totalIterations) * 100;
+          progressBar.style.width = `${progress}%`;
+
+          if (currentIteration % 100 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+        }
+
+        if (!trainingStopped) {
+          const accuracy = testAccuracy();
+          accuracyText.textContent = `${(accuracy * 100).toFixed(2)}%`;
+          updateStatus(`Эпоха ${currentEpoch}/${config.epochs} завершена. Точность: ${(accuracy * 100).toFixed(2)}%`);
+        }
+      }
+
+      isTraining = false;
+      document.getElementById('trainBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+
+      if (trainingStopped) {
+        updateStatus('Обучение остановлено');
+      } else {
+        const finalAccuracy = testAccuracy();
+        accuracyText.textContent = `${(finalAccuracy * 100).toFixed(2)}%`;
+        updateStatus(`Обучение завершено. Итоговая точность: ${(finalAccuracy * 100).toFixed(2)}%`);
+        showMessage('Обучение завершено!', 'success');
+      }
+    }
+
+    // =========== EVENTS ===========
+    document.addEventListener('DOMContentLoaded', async () => {
+      initUI();
+      initDrawingHandlers();
+
+      // Важно: после того как браузер применит CSS размеры, выставляем HiDPI буфер
+      setupHiDPICanvas();
+      window.addEventListener('resize', () => {
+        // при смене ширины/высоты, чтобы не “съезжало” и не мылось
+        setupHiDPICanvas();
+      });
+
+      await generateTestData(1200);
+
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        clearCanvas();
+        resetPredictionsUI();
+      });
+
+      document.getElementById('predictBtn').addEventListener('click', processDrawing);
+
+      document.getElementById('randomBtn').addEventListener('click', () => {
+        const randomDigit = Math.floor(Math.random() * 10);
+        loadTestDigit(randomDigit);
+      });
+
+      document.getElementById('loadTestBtn').addEventListener('click', () => {
+        generateTestData(2000);
+      });
+
+      document.getElementById('initBtn').addEventListener('click', () => {
+        network = new NeuralNetwork(
+          config.inputNodes,
+          config.hiddenNodes,
+          config.outputNodes,
+          config.learningRate
+        );
+
+        updateStatus(`Сеть инициализирована: 784-${config.hiddenNodes}-10`);
+        showMessage('Нейронная сеть создана!', 'success');
+        document.getElementById('trainBtn').disabled = false;
+      });
+
+      document.getElementById('trainBtn').addEventListener('click', trainNetwork);
+
+      document.getElementById('stopBtn').addEventListener('click', () => {
+        trainingStopped = true;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('trainBtn').disabled = false;
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        network = null;
+        isTraining = false;
+        trainingStopped = true;
+
+        progressBar.style.width = '0%';
+        accuracyText.textContent = '0%';
+        epochCount.textContent = '0/0';
+        updateStatus('Сеть сброшена');
+
+        document.getElementById('trainBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true;
+
+        showMessage('Все параметры сброшены', 'info');
+      });
+
+      document.getElementById('hiddenSlider').addEventListener('input', (e) => {
+        config.hiddenNodes = parseInt(e.target.value, 10);
+        document.getElementById('hiddenValue').textContent = config.hiddenNodes;
+        hiddenCount.textContent = config.hiddenNodes;
+
+        if (network) updateStatus('Скрытые нейроны изменены — переинициализируйте сеть');
+      });
+
+      document.getElementById('learningSlider').addEventListener('input', (e) => {
+        config.learningRate = parseFloat(e.target.value);
+        document.getElementById('learningValue').textContent = config.learningRate;
+        if (network) network.lr = config.learningRate;
+      });
+
+      document.getElementById('epochsSlider').addEventListener('input', (e) => {
+        config.epochs = parseInt(e.target.value, 10);
+        document.getElementById('epochsValue').textContent = config.epochs;
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,843 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Главная</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/style.css' %}">
+   
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background-image: url("https://img.freepik.com/premium-photo/technology-neural-network-background-imagegenerative-ai_710973-6943.jpg?w=2000");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        
+        .silver {
+            position: absolute;
+            left: 0;
+            bottom: 190px;
+            width: 150px;
+            z-index: 1;
+        }
+
+        /* --------------- ИНФА ОБО МНЕ -------------------- */
+        .name-container {
+            position: absolute;
+            left: 20px;
+            top: 220px;
+            z-index: 2;
+        }
+
+        .name {
+            position: relative;
+        }
+
+        .circle {
+            border-radius: 8px;
+            border: 1px solid;
+            width: 5px;
+            height: 5px;
+            position: absolute;
+            left: 60px;
+            top: 15px;
+            color: black;
+        }
+
+        /* ----------------- СЕРТИФИКАТЫ ------------------ */
+        .certificates {
+            position: absolute;
+            left: 20px;
+            bottom: 790px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .certificate {
+            width: 220px;
+            transition: transform 0.5s, opacity 0.5s;
+            box-shadow: 0 10px 20px 10px rgba(0, 0, 0, .7);
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .certificate:hover {
+            transform: scale(1.8) translateX(30px) translateY(30px);
+            z-index: 100;
+            opacity: 1;
+        }
+
+        /* ------------------- ГЛАВНАЯ БУКВА "Г" -------------------- */
+        .letter-g {
+            position: absolute;
+            left: 250px;
+            top: 565px;
+            transform: translateY(-50%);
+            z-index: 3;
+        }
+
+        #cross2 {
+            display: block;
+            background: #94e8fd;
+            height: 450px;
+            width: 30px;
+            box-shadow: 0 10px 20px 10px rgba(0, 0, 0, .7);
+        }
+
+        #cross2:after {
+            background: #94e8fd;
+            content: "";
+            height: 15px;
+            width: 250px;
+            position: absolute;
+            bottom: 0;
+            left: -250px;
+            box-shadow: -20px 20px 20px 10px rgba(0, 0, 0, .7);
+        }
+
+        #cross2:before {
+            background: #94e8fd;
+            content: "";
+            height: 15px;
+            width: 670px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-shadow: 30px 5px 20px 5px rgba(0, 0, 0, .7);
+        }
+
+        /* ---------------------- НАЗВАНИЕ САЙТА -------------------- */
+        .fullstack {
+            position: absolute;
+            left: 320px;
+            top: 37%;
+            color: #94e8fd;
+            text-shadow: 1px 1px 2px black,
+                        0 0 1em rgb(0, 0, 0),
+                        0 0 0.5em rgb(0, 0, 0);
+            z-index: 4;
+        }
+
+        /* ---------------------- САМОПРЕЗЕНТАЦИЯ -------------------- */
+        .promo {
+            position: absolute;
+            right: 1000px;
+            top: 300px;
+            color: #94e8fd;
+            text-shadow: 1px 1px 2px black,
+                        0 0 1em rgb(0, 0, 0),
+                        0 0 0.5em rgb(0, 0, 0);
+            z-index: 4;
+        }
+
+        /* ---------------------- БУКВА "Г" -------------------- */
+        .letter-g-small {
+            position: absolute;
+            right: 1450px;
+            top: 750px;
+            transform: translateY(-50%);
+            z-index: 3;
+        }
+
+        #cross1 {
+            background: #94e8fd;
+            height: 450px;
+            width: 30px;
+            box-shadow: 0 10px 20px 10px rgba(0, 0, 0, .7);
+        }
+
+        #cross1:after {
+            background: #94e8fd;
+            content: "";
+            height: 15px;
+            width: 450px;
+            position: absolute;
+            top: 0;
+            left: 30px;
+            box-shadow: 20px 20px 20px 10px rgba(0, 0, 0, .7);
+        }
+
+        /* ---------------------- КОНТАКТЫ -------------------- */
+        .contact {
+            position: absolute;
+            left: 20px;
+            top: 830px;
+            color: #94e8fd;
+            text-shadow: 1px 1px 2px black,
+                        0 0 1em rgb(0, 0, 0),
+                        0 0 0.5em rgb(0, 0, 0);
+            z-index: 4;
+        }
+
+        .contact a {
+            color: #94e8fd;
+            text-decoration: none;
+            font-size: 19px;
+        }
+
+        /* ---------------------- НАВЫКИ -------------------- */
+        .skill {
+            position: absolute;
+            right: 1120px;
+            bottom: 190px;
+            color: #94e8fd;
+            text-shadow: 1px 1px 2px black,
+                        0 0 1em rgb(0, 0, 0),
+                        0 0 0.5em rgb(0, 0, 0);
+            z-index: 4;
+            text-align: left;
+            width: 300px;
+        }
+
+        .sertif {
+            width: 200px;
+            transition: transform 0.5s, opacity 0.5s;
+            box-shadow: 0 10px 20px 10px rgba(0, 0, 0, .7);
+            cursor: pointer;
+            margin-top: 10px;
+            opacity: 0.6;
+        }
+
+        .sertif:hover {
+            transform: scale(2);
+            opacity: 1;
+        }
+        
+        .kit {
+            margin: 5px 0;
+        }
+        
+        /* ---------------------- СФЕРА -------------------- */
+        #sphere-wrap {
+            position: absolute;
+            right: 30px;
+            top: 60%;
+            transform: translateY(-50%);
+            height: 1000px;
+            width: 1000px;
+            z-index: 5;
+            transition: transform 0.5s ease;
+        }
+        
+        #sphere {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Стиль для текста подсказки */
+        .sphere-tooltip {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #94e8fd;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px black,
+                        0 0 1em rgb(0, 0, 0),
+                        0 0 0.5em rgb(0, 0, 0);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .sphere-button:hover .sphere-tooltip {
+            opacity: 1;
+        }
+        /* ---------------------------------------------------- */
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <img src="{% static 'images/image.png' %}" class="silver" alt="Silver">
+        
+        <!-- --------------- ИНФА ОБО МНЕ -------------------- -->
+        <div class="name-container">
+            <svg viewBox="0 0 500 80" width="300" height="80" stroke="white" class="name">
+                <text x="75" y="22" font-size="19" stroke="white" stroke-width="0.4">Бабкин Данил</text>
+                <text x="75" y="45" font-size="19" stroke="white" stroke-width="0.4">Владимирович</text>
+                <text x="75" y="65" font-size="19" stroke="white" stroke-width="0.4">Тюмень 40 лет</text>
+                <line x1="0" x2="50" y1="80" y2="30" />
+                <line x1="50" x2="200" y1="30" y2="30" />
+            </svg>
+            <div class="circle"></div>
+        </div>
+
+        <!-- ---------------------- СЕРТИФИКАТЫ --------------- -->
+        <div class="certificates">
+            <img src="{% static 'images/basics_1.png' %}" class="certificate" alt="Basic 1">
+            <img src="{% static 'images/basics_2.png' %}" class="certificate" alt="Basic 2">
+            <img src="{% static 'images/github.png' %}" class="certificate" alt="GitHub">
+            <img src="{% static 'images/database.png' %}" class="certificate" alt="Database">
+            <img src="{% static 'images/django.png' %}" class="certificate" alt="Django">
+            <img src="{% static 'images/html_css.png' %}" class="certificate" alt="HTML CSS">
+        </div>
+
+        <!-- ------------------- Главная тройная буква "Г" ------------------------------>
+        <div class="letter-g">
+            <div id="cross2"></div>
+        </div>
+
+        <!-- ----------------------- НАЗВАНИЕ САЙТА FULLSTACK ----------------------------- -->
+        <div class="fullstack">
+            <h1>A BEGINNER<br>FULLSTACK PROGRAMMER</h1>
+        </div>
+
+        <!-- ---------------------- САМОПРЕЗЕНТАЦИЯ -------------------------------- -->
+        <h3 class="promo">SELF-PRESENTATION</h3>
+
+        <!----------------------- Стандартная буква "Г" -------------------------->
+        <div class="letter-g-small">
+            <div id="cross1"></div>
+        </div>
+
+        <!-- --------------------------------- МОИ КОНТАКТЫ ------------------------------- -->
+        <div class="contact">
+            <h2 style="margin-bottom: 5px;">My CONTACTS</h2>
+            <p style="margin: 5px 0;">Phone: <a>89667613046</a></p>
+            <p style="margin: 5px 0;">E-mail: <a>danil.babkin.85@mail.ru</a></p>
+            <p style="margin: 5px 0;">GitHub: <a target="_blank" href="https://github.com/proskovey">proskovey</a></p>
+        </div>
+        
+        <!-- ---------------------- НАВЫКИ -------------------- -->
+        <div class="skill">
+            <h2>My S K I L L S:</h2>
+            <p class="kit">PYTHON, GITHub, DB<br>DJANGO, HTML и CSS</p>
+            <img class="sertif" src="{% static 'images/sertific.png' %}" alt="Certificate">
+        </div>
+        
+        <!-- ---------------------- АНИМИРОВАННАЯ СФЕРА-КНОПКА -------------------- -->
+        <div id="sphere-wrap" class="sphere-button">
+            <canvas id="sphere"></canvas>
+            <div class="sphere-tooltip">Нажмите для перехода</div>
+        </div>
+    </div>
+    
+    <script>
+        window.addEventListener("load", windowLoadHandler, false);
+        let sphereRad = 320;
+        let scale = 1;
+        let explosionActive = false;
+        let explosionStartTime = 0;
+
+        function windowLoadHandler() {
+            canvasApp();
+        }
+
+        function canvasApp() {
+            let theCanvas = document.getElementById("sphere");
+            let sphere_wrap = document.getElementById("sphere-wrap");
+            let context = theCanvas.getContext("2d");
+            let displayWidth;
+            let displayHeight;
+            let timer;
+            let wait;
+            let count;
+            let numToAddEachFrame;
+            let particleList;
+            let recycleBin;
+            let particleAlpha;
+            let fLen;
+            let m;
+            let projCenterX;
+            let projCenterY;
+            let zMax;
+            let turnAngle;
+            let turnSpeed;
+            let sphereCenterX, sphereCenterY, sphereCenterZ;
+            let particleRad;
+            let zeroAlphaDepth;
+            let randAccelX, randAccelY, randAccelZ;
+            let gravity;
+            let rgbString;
+            let p;
+            let outsideTest;
+            let nextParticle;
+            let sinAngle;
+            let cosAngle;
+            let rotX, rotZ;
+            let depthAlphaFactor;
+            let i;
+            let theta, phi;
+            let x0, y0, z0;
+
+            // Параметры соединений
+            let connectionDistance = 150;
+            let connectionOpacity = 0.4;
+            let maxConnections = 8;
+            let particleCount = 0;
+            let maxParticles = 600;
+
+            init();
+            window.addEventListener('resize', init, false);
+
+            function init() {
+                wait = 1;
+                count = wait - 1;
+                numToAddEachFrame = 10;
+                rgbString = "rgba(148,232,253,";
+                particleAlpha = 1;        
+                displayWidth = theCanvas.width = sphere_wrap.offsetWidth;
+                displayHeight = theCanvas.height = sphere_wrap.offsetHeight;    
+                fLen = 400;
+                projCenterX = displayWidth/2;
+                projCenterY = displayHeight/2;
+                zMax = fLen-2;
+                particleList = {};
+                recycleBin = {};
+                randAccelX = 0.05;
+                randAccelY = 0.05;
+                randAccelZ = 0.05;
+                gravity = 0;
+                
+                particleRad = 4.5;
+                
+                sphereCenterX = 0;
+                sphereCenterY = 0;
+                sphereCenterZ = -3 - sphereRad;
+                zeroAlphaDepth = -900;
+                turnSpeed = 2*Math.PI/1500;
+                turnAngle = 0;
+                particleCount = 0;
+                explosionActive = false;
+                timer = setInterval(onTimer, 10/24);
+                
+                // Инициализируем hover эффект и клик после загрузки сферы
+                setTimeout(initSphereButton, 1000);
+            }
+
+            function onTimer() {    
+                count++;
+                if (count >= wait && particleCount < maxParticles && !explosionActive) {        
+                    count = 0;
+                    for (i = 0; i < numToAddEachFrame && particleCount < maxParticles; i++) {
+                        theta = Math.random()*2*Math.PI;
+                        phi = Math.acos(Math.random()*2-1);
+                        x0 = sphereRad*Math.sin(phi)*Math.cos(theta);
+                        y0 = sphereRad*Math.sin(phi)*Math.sin(theta);
+                        z0 = sphereRad*Math.cos(phi);
+                        let p = addParticle(x0, sphereCenterY + y0, sphereCenterZ + z0, 0.001*x0, 0.001*y0, 0.001*z0);
+                        p.attack = 40;
+                        p.hold = 80;
+                        p.decay = 120;
+                        p.initValue = 0;
+                        p.holdValue = particleAlpha;
+                        p.lastValue = 0;
+                        p.stuckTime = 120 + Math.random()*40;
+                        p.accelX = 0;
+                        p.accelY = gravity;
+                        p.accelZ = 0;
+                        particleCount++;
+                    }
+                }
+                
+                // Если активирован взрыв, добавляем дополнительные силы частицам
+                if (explosionActive) {
+                    applyExplosionForces();
+                }
+                
+                turnAngle = (turnAngle + turnSpeed) % (2*Math.PI);
+                sinAngle = Math.sin(turnAngle);
+                cosAngle = Math.cos(turnAngle);
+                context.clearRect(0, 0, displayWidth, displayHeight);
+
+                // Сначала рисуем соединения (только если нет взрыва)
+                if (!explosionActive) {
+                    drawDenseConnections();
+                }
+
+                // Затем рисуем БОЛЬШИЕ частицы
+                p = particleList.first;
+                while (p != null) {
+                    nextParticle = p.next;
+                    p.age++;
+                    
+                    // Применяем физику движения
+                    if (p.age > p.stuckTime || explosionActive) {    
+                        p.velX += p.accelX + randAccelX*(Math.random()*2 - 1);
+                        p.velY += p.accelY + randAccelY*(Math.random()*2 - 1);
+                        p.velZ += p.accelZ + randAccelZ*(Math.random()*2 - 1);
+                        p.x += p.velX;
+                        p.y += p.velY;
+                        p.z += p.velZ;
+                    }
+                    
+                    rotX = cosAngle*p.x + sinAngle*(p.z - sphereCenterZ);
+                    rotZ = -sinAngle*p.x + cosAngle*(p.z - sphereCenterZ) + sphereCenterZ;
+                    m = scale * fLen/(fLen - rotZ);
+                    p.projX = rotX*m + projCenterX;
+                    p.projY = p.y*m + projCenterY;
+
+                    // Сохраняем преобразованные координаты для соединений
+                    p.rotX = rotX;
+                    p.rotZ = rotZ;
+                    p.screenX = p.projX;
+                    p.screenY = p.projY;
+
+                    if (p.age < p.attack+p.hold+p.decay) {
+                        if (p.age < p.attack) {
+                            p.alpha = (p.holdValue - p.initValue)/p.attack*p.age + p.initValue;
+                        } else if (p.age < p.attack+p.hold) {
+                            p.alpha = p.holdValue;
+                        } else if (p.age < p.attack+p.hold+p.decay) {
+                            p.alpha = (p.lastValue - p.holdValue)/p.decay*(p.age-p.attack-p.hold) + p.holdValue;
+                        }
+                    } else {
+                        p.dead = true;
+                        particleCount--;
+                    }
+                    
+                    if ((p.projX > displayWidth)||(p.projX<0)||(p.projY<0)||(p.projY>displayHeight)||(rotZ>zMax)) {
+                        outsideTest = true;
+                    } else {
+                        outsideTest = false;
+                    }
+                    
+                    if (outsideTest||p.dead) {
+                        recycle(p);
+                    } else {
+                        depthAlphaFactor = (1-rotZ/zeroAlphaDepth);
+                        depthAlphaFactor = (depthAlphaFactor > 1) ? 1 : ((depthAlphaFactor<0) ? 0 : depthAlphaFactor);
+                        
+                        // Рисуем БОЛЬШИЕ частицы с градиентом для объема
+                        drawLargeParticle(context, p.projX, p.projY, m*particleRad, depthAlphaFactor*p.alpha);
+                    }
+                    p = nextParticle;
+                }
+                
+                // Если взрыв активен, проверяем не пора ли переходить на новую страницу
+                if (explosionActive && Date.now() - explosionStartTime > 1000) {
+                    // Переход на новую страницу после завершения анимации взрыва
+                    window.location.href = '/new-page/'; // Замените на ваш URL
+                }
+            }
+
+            // Функция для применения сил взрыва ко всем частицам
+            function applyExplosionForces() {
+                let p = particleList.first;
+                const explosionPower = 0.5; // Мощность взрыва
+                const currentTime = Date.now() - explosionStartTime;
+                
+                // Уменьшаем силу взрыва со временем
+                const timeFactor = Math.max(0, 1 - currentTime / 1000);
+                
+                while (p != null) {
+                    // Вычисляем направление от центра сферы к частице
+                    let dx = p.x - sphereCenterX;
+                    let dy = p.y - sphereCenterY;
+                    let dz = (p.z - sphereCenterZ);
+                    
+                    // Нормализуем вектор направления
+                    let distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    if (distance > 0) {
+                        dx /= distance;
+                        dy /= distance;
+                        dz /= distance;
+                    }
+                    
+                    // Применяем силу взрыва (отталкивание от центра)
+                    p.velX += dx * explosionPower * timeFactor;
+                    p.velY += dy * explosionPower * timeFactor;
+                    p.velZ += dz * explosionPower * timeFactor;
+                    
+                    // Добавляем случайное ускорение для более хаотичного разлета
+                    p.velX += (Math.random() - 0.5) * 0.2 * timeFactor;
+                    p.velY += (Math.random() - 0.5) * 0.2 * timeFactor;
+                    p.velZ += (Math.random() - 0.5) * 0.2 * timeFactor;
+                    
+                    p = p.next;
+                }
+            }
+
+            // Функция для активации взрыва
+            function triggerExplosion() {
+                explosionActive = true;
+                explosionStartTime = Date.now();
+                
+                // Увеличиваем случайные ускорения для более хаотичного движения
+                randAccelX = 0.2;
+                randAccelY = 0.2;
+                randAccelZ = 0.2;
+                
+                // Отключаем гравитацию во время взрыва
+                gravity = 0;
+            }
+
+            // Функция для рисования больших частиц с объемом
+            function drawLargeParticle(ctx, x, y, radius, alpha) {
+                // Основная частица
+                ctx.fillStyle = rgbString + alpha + ")";
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2*Math.PI, false);
+                ctx.closePath();
+                ctx.fill();
+
+                // Внутреннее свечение для объема
+                let gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                gradient.addColorStop(0, `rgba(200,220,255,${alpha * 0.8})`);
+                gradient.addColorStop(0.7, `rgba(169,195,238,${alpha * 0.5})`);
+                gradient.addColorStop(1, `rgba(140,170,210,${alpha * 0.2})`);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2*Math.PI, false);
+                ctx.closePath();
+                ctx.fill();
+
+                // Яркое ядро
+                ctx.fillStyle = `rgba(220,235,255,${alpha * 0.9})`;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 0.4, 0, 2*Math.PI, false);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            function drawDenseConnections() {
+                let particles = [];
+                let p = particleList.first;
+                
+                // Собираем все активные частицы в массив
+                while (p != null) {
+                    if (!p.dead) {
+                        particles.push(p);
+                    }
+                    p = p.next;
+                }
+
+                // Слой 1: Близкие соединения
+                for (let i = 0; i < particles.length; i++) {
+                    let p1 = particles[i];
+                    let closeConnections = 0;
+                    
+                    for (let j = i + 1; j < particles.length && closeConnections < 4; j++) {
+                        let p2 = particles[j];
+                        
+                        let dx = p1.rotX - p2.rotX;
+                        let dy = p1.y - p2.y;
+                        let dz = p1.rotZ - p2.rotZ;
+                        let distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                        
+                        if (distance < 80) {
+                            let connectionAlpha = 0.6 * (1 - distance/80);
+                            let depthAlpha1 = (1-p1.rotZ/zeroAlphaDepth);
+                            let depthAlpha2 = (1-p2.rotZ/zeroAlphaDepth);
+                            let finalAlpha = connectionAlpha * Math.min(depthAlpha1, depthAlpha2) * Math.min(p1.alpha, p2.alpha);
+                            
+                            if (finalAlpha > 0.1) {
+                                context.strokeStyle = `rgba(200,220,255,${finalAlpha})`;
+                                context.lineWidth = 2.5;
+                                context.beginPath();
+                                context.moveTo(p1.screenX, p1.screenY);
+                                context.lineTo(p2.screenX, p2.screenY);
+                                context.stroke();
+                                closeConnections++;
+                            }
+                        }
+                    }
+                }
+
+                // Слой 2: Средние соединения
+                for (let i = 0; i < particles.length; i++) {
+                    let p1 = particles[i];
+                    let mediumConnections = 0;
+                    
+                    for (let j = i + 1; j < particles.length && mediumConnections < 6; j++) {
+                        let p2 = particles[j];
+                        
+                        let dx = p1.rotX - p2.rotX;
+                        let dy = p1.y - p2.y;
+                        let dz = p1.rotZ - p2.rotZ;
+                        let distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                        
+                        if (distance >= 80 && distance < 120) {
+                            let connectionAlpha = 0.3 * (1 - distance/120);
+                            let depthAlpha1 = (1-p1.rotZ/zeroAlphaDepth);
+                            let depthAlpha2 = (1-p2.rotZ/zeroAlphaDepth);
+                            let finalAlpha = connectionAlpha * Math.min(depthAlpha1, depthAlpha2) * Math.min(p1.alpha, p2.alpha);
+                            
+                            if (finalAlpha > 0.05) {
+                                context.strokeStyle = `rgba(169,195,238,${finalAlpha})`;
+                                context.lineWidth = 1.8;
+                                context.beginPath();
+                                context.moveTo(p1.screenX, p1.screenY);
+                                context.lineTo(p2.screenX, p2.screenY);
+                                context.stroke();
+                                mediumConnections++;
+                            }
+                        }
+                    }
+                }
+
+                // Слой 3: Дальние соединения
+                for (let i = 0; i < particles.length; i++) {
+                    let p1 = particles[i];
+                    let farConnections = 0;
+                    
+                    for (let j = i + 1; j < particles.length && farConnections < 4; j++) {
+                        let p2 = particles[j];
+                        
+                        let dx = p1.rotX - p2.rotX;
+                        let dy = p1.y - p2.y;
+                        let dz = p1.rotZ - p2.rotZ;
+                        let distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                        
+                        if (distance >= 120 && distance < connectionDistance) {
+                            let connectionAlpha = 0.15 * (1 - distance/connectionDistance);
+                            let depthAlpha1 = (1-p1.rotZ/zeroAlphaDepth);
+                            let depthAlpha2 = (1-p2.rotZ/zeroAlphaDepth);
+                            let finalAlpha = connectionAlpha * Math.min(depthAlpha1, depthAlpha2) * Math.min(p1.alpha, p2.alpha);
+                            
+                            if (finalAlpha > 0.03) {
+                                context.strokeStyle = `rgba(140,170,210,${finalAlpha})`;
+                                context.lineWidth = 1.0;
+                                context.beginPath();
+                                context.moveTo(p1.screenX, p1.screenY);
+                                context.lineTo(p2.screenX, p2.screenY);
+                                context.stroke();
+                                farConnections++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            function addParticle(x0,y0,z0,vx0,vy0,vz0) {
+                let newParticle;
+                if (recycleBin.first != null) {
+                    newParticle = recycleBin.first;
+                    if (newParticle.next != null) {
+                        recycleBin.first = newParticle.next;
+                        newParticle.next.prev = null;
+                    } else {
+                        recycleBin.first = null;
+                    }
+                } else {
+                    newParticle = {};
+                }
+                if (particleList.first == null) {
+                    particleList.first = newParticle;
+                    newParticle.prev = null;
+                    newParticle.next = null;
+                } else {
+                    newParticle.next = particleList.first;
+                    particleList.first.prev = newParticle;
+                    particleList.first = newParticle;
+                    newParticle.prev = null;
+                }
+                newParticle.x = x0;
+                newParticle.y = y0;
+                newParticle.z = z0;
+                newParticle.velX = vx0;
+                newParticle.velY = vy0;
+                newParticle.velZ = vz0;
+                newParticle.age = 0;
+                newParticle.dead = false;
+                if (Math.random() < 0.5) {
+                    newParticle.right = true;
+                } else {
+                    newParticle.right = false;
+                }
+                return newParticle;
+            }
+
+            function recycle(p) {
+                if (particleList.first == p) {
+                    if (p.next != null) {
+                        p.next.prev = null;
+                        particleList.first = p.next;
+                    } else {
+                        particleList.first = null;
+                    }
+                } else {
+                    if (p.next == null) {
+                        p.prev.next = null;
+                    } else {
+                        p.prev.next = p.next;
+                        p.next.prev = p.prev;
+                    }
+                }
+                if (recycleBin.first == null) {
+                    recycleBin.first = p;
+                    p.prev = null;
+                    p.next = null;
+                } else {
+                    p.next = recycleBin.first;
+                    recycleBin.first.prev = p;
+                    recycleBin.first = p;
+                    p.prev = null;
+                }
+            }
+
+            // Функция для инициализации сферы как кнопки
+            function initSphereButton() {
+                const sphereWrap = document.getElementById('sphere-wrap');
+                
+                // Создаем невидимый элемент точно по размеру видимой сферы
+                const hoverArea = document.createElement('div');
+                hoverArea.style.position = 'absolute';
+                hoverArea.style.width = '400px';
+                hoverArea.style.height = '400px';
+                hoverArea.style.borderRadius = '50%';
+                hoverArea.style.background = 'transparent';
+                hoverArea.style.top = '50%';
+                hoverArea.style.left = '50%';
+                hoverArea.style.transform = 'translate(-50%, -50%)';
+                hoverArea.style.cursor = 'pointer';
+                hoverArea.style.zIndex = '10';
+                
+                sphereWrap.appendChild(hoverArea);
+                
+                // Hover эффект - уменьшение размера
+                hoverArea.addEventListener('mouseenter', function() {
+                    if (!explosionActive) {
+                        sphereWrap.style.transform = 'translateY(-50%) scale(0.7)';
+                    }
+                });
+                
+                hoverArea.addEventListener('mouseleave', function() {
+                    if (!explosionActive) {
+                        sphereWrap.style.transform = 'translateY(-50%) scale(1)';
+                    }
+                });
+
+                // Клик - запуск взрыва и переход на новую страницу
+                hoverArea.addEventListener('click', function() {
+                    if (!explosionActive) {
+                        // Создаем эффект нажатия
+                        sphereWrap.style.transform = 'translateY(-50%) scale(0.6)';
+                        
+                        // Запускаем взрыв частиц
+                        triggerExplosion();
+                        
+                        // Переход на новую страницу происходит автоматически после анимации взрыва
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
